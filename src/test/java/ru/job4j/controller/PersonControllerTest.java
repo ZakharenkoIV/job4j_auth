@@ -10,7 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.job4j.Job4jAuthApplication;
 import ru.job4j.domain.Person;
-import ru.job4j.repository.PersonRepository;
+import ru.job4j.service.PersonService;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,21 +30,21 @@ public class PersonControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private PersonRepository persons;
+    private PersonService persons;
 
     @Test
     public void whenGetFindAllPersonsThenReturnAllPersonsList() throws Exception {
         List<Person> allPersons = List.of(
-                Person.of(1, "parsentev", "123"),
-                Person.of(2, "ban", "123"),
-                Person.of(3, "ivan", "123")
+                Person.of(1, "parsentev", "123", 1),
+                Person.of(2, "ban", "123", 2),
+                Person.of(3, "ivan", "123", 3)
         );
         Mockito.when(persons.findAll()).thenReturn(allPersons);
         StringJoiner foundAllPersons = new StringJoiner(",", "[", "]");
         foundAllPersons.add("{\"id\":1,\"login\":\"parsentev\",\"password\":\"123\"}");
         foundAllPersons.add("{\"id\":2,\"login\":\"ban\",\"password\":\"123\"}");
         foundAllPersons.add("{\"id\":3,\"login\":\"ivan\",\"password\":\"123\"}");
-        this.mockMvc.perform(get("/person/"))
+        this.mockMvc.perform(get("/persons/"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
@@ -54,9 +54,9 @@ public class PersonControllerTest {
     @Test
     public void whenGetPersonByIdThenReturnPerson() throws Exception {
         Mockito.when(persons.findById(2)).thenReturn(
-                Optional.of(Person.of(2, "ban", "123")));
+                Optional.of(Person.of(2, "ban", "123", 2)));
         String foundPerson = "{\"id\":2,\"login\":\"ban\",\"password\":\"123\"}";
-        this.mockMvc.perform(get("/person/{id}", 2))
+        this.mockMvc.perform(get("/persons/{id}", 2))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
@@ -65,10 +65,10 @@ public class PersonControllerTest {
 
     @Test
     public void whenSavePersonThenReturnThisPerson() throws Exception {
-        Person person = Person.of(4, "tom", "123");
+        Person person = Person.of(2, "ban", "123", 2);
         Mockito.when(persons.save(any(Person.class))).thenReturn(person);
-        String savedPerson = "{\"id\":4,\"login\":\"tom\",\"password\":\"123\"}";
-        this.mockMvc.perform(post("/person/")
+        String savedPerson = "{\"id\":2,\"login\":\"ban\",\"password\":\"123\"}";
+        this.mockMvc.perform(post("/persons/")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(savedPerson))
                 .andDo(print())
@@ -79,10 +79,10 @@ public class PersonControllerTest {
 
     @Test
     public void whenPutPersonThenReturnStatusOk() throws Exception {
-        Person person = Person.of(2, "tom", "123");
+        Person person = Person.of(2, "tom", "123", 2);
         Mockito.when(persons.save(any(Person.class))).thenReturn(person);
         String savedPerson = "{\"id\":2,\"login\":\"tom\",\"password\":\"123\"}";
-        this.mockMvc.perform(put("/person/")
+        this.mockMvc.perform(put("/persons/")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(savedPerson))
                 .andDo(print())
@@ -92,8 +92,8 @@ public class PersonControllerTest {
 
     @Test
     public void whenDeletePersonThenReturnStatusOk() throws Exception {
-        doNothing().when(persons).delete(Person.of(2, null, null));
-        this.mockMvc.perform(delete("/person/{id}", 2))
+        doNothing().when(persons).delete(2);
+        this.mockMvc.perform(delete("/persons/{id}", 2))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").doesNotExist());

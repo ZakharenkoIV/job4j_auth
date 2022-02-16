@@ -1,24 +1,39 @@
 package ru.job4j.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sun.istack.NotNull;
+
+import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
+@Table(name = "persons")
 public class Person {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @NotNull
     private String login;
+
+    @NotNull
     private String password;
 
-    public static Person of(int id, String login, String password) {
+    @NotNull
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id")
+    private Employee employee;
+
+    public static Person of(int id, String login, String password, int employeeId) {
         Person person = new Person();
         person.setId(id);
         person.setLogin(login);
         person.setPassword(password);
+        Employee employee = new Employee();
+        employee.setId(employeeId);
+        person.setEmployee(employee);
         return person;
     }
 
@@ -44,6 +59,14 @@ public class Person {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Employee getEmployee() {
+        return employee;
+    }
+
+    public void setEmployee(Employee employee) {
+        this.employee = employee;
     }
 
     @Override
